@@ -1,0 +1,29 @@
+- name: install gitlab gpg key
+  apt_key:
+    state: present
+    url: https://packages.gitlab.com/gpg.key
+
+- name: install packages required for https:// repositories
+  apt:
+    name:
+      - curl
+      - ca-certificates
+      - apt-transport-https
+    state: present
+
+- name: template /etc/apt/sources.list.d/gitlab-ce.list
+  apt_repository:
+    repo: "deb https://packages.gitlab.com/gitlab/gitlab-ce/debian/ {{ gitlab_ansible_distribution_release | default(ansible_distribution_release) }} main"
+    state: present
+    filename: gitlab_gitlab-ce.list
+    update_cache: yes
+
+- name: run apt-get update because the previous tasks seems to fail sometimes
+  shell: apt-get update
+  args:
+    warn: False
+
+- name: Install GitLab CE
+  apt:
+    name: gitlab-ce
+    state: present
