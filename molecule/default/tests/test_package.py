@@ -6,5 +6,5 @@ testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
     os.environ['MOLECULE_INVENTORY_FILE']).get_hosts('all')
 
 
-def test_dummy(host):
+def test_package(host):
     assert not host.package('gitlab-ce').is_installed
