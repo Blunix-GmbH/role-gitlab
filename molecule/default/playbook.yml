@@ -12,7 +12,6 @@
   hosts: all
   become: yes
   vars:
-    gitlab_enabled: yes
     # There is no repo for xenial but the stretch repo seems to work..
     # Overriding this var here for usage in templates/etc/apt/sources.list.d/gitlab_gitlab-ce.list
     gitlab_ansible_distribution_release: stretch
@@ -28,7 +27,7 @@
     gitlab_root_user_email: "monitoring@example.com"
     # Disable ssl cert validation for molecule runs (use self signed)
     gitlab_api_calls_validate_certs: False
-    
+
   pre_tasks:
 
     # Prepare a snakeoil cert for gitlab to use

@@ -1,29 +1,45 @@
-# - name: install python-gitlab
-#   apt:
-#     pkg: python-gitlab
-#     state: present
-#
-# - name: Update the initial admin password
-#   gitlab_user:
-#     server_url: "{{ gitlab_external_url }}"
-#     validate_certs: "{{ gitlab_api_calls_validate_certs }}"
-#     login_user: root
-#     login_password: "5iveL!fe"
-#     name: root
-#     username: root
-#     password: "{{ gitlab_root_user_password }}"
-#     email: "{{ gitlab_root_user_email }}"
-#     state: present
-#   ignore_errors: True
-  # delegate_to: localhost
+- name: install python-pexpect
+  apt:
+    name:
+      - python-pexpect
+      - expect
+    state: present
 
-- name: run these commands manually now to set a new root user password
+- name: disabling gitlab signup
+  become: yes
+  register: gitlab_disable_signup_output
+  shell: |
+    expect -c 'spawn gitlab-rails console;
+      expect "%s";
+      send "x = ApplicationSetting.first\r";
+      expect "%s";
+      send "x.signup_enabled = false\r";
+      expect "%s";
+      send "x.save!\r";
+      expect "%s";
+      send "^D"'
+
+- name: show disabling gitlab signup output
   debug:
-    msg: |
-      gitlab-rails console
-      # wait a minute...
-      user = User.where(id: 1).first
-      user.password = "{{ gitlab_root_user_password }}"
-      user.password_confirmation = "{{ gitlab_root_user_password }}"
-      user.save!
-      exit
+    msg: "{{ gitlab_disable_signup_output.stdout_lines }}"
+
+
+- name: set initial root password
+  become: yes
+  register: gitlab_set_initial_root_password_out
+  shell: |
+    expect -c 'spawn gitlab-rails console;
+      expect "%s";
+      send "user = User.where(id: 1).first\r";
+      expect "%s";
+      send "user.password = \"{{ gitlab_root_user_password }}\"\r";
+      expect "%s";
+      send "user.password_confirmation = \"{{ gitlab_root_user_password }}\"\r";
+      expect "%s";
+      send "user.save!\r";
+      expect "%s";
+      send "^D"'
+
+- name: show set initial root password output
+  debug:
+    msg: "{{ gitlab_set_initial_root_password_out.stdout_lines }}"
