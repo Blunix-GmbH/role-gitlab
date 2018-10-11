@@ -1,6 +1,11 @@
 # Ansible Role gitlab
 This role installs and configures a gitlab server.
 
+# TODO
+- add a molecule test that curls the login page | grep login
+- add a test for admin login
+- add LDAP for users
+
 # Example play
 An example play can be found in `molecule/install/playbook.yml`
 
@@ -9,9 +14,6 @@ You need to setup ssl / letsencrypt certificates so gitlab can use them.
 
 # Maintenance
 - update the nginx ssl ciphers in `defaults/main.yml` using the mozilla ssl config generator
-
-# License
-Apache-2.0
 
 # License
 Apache-2.0

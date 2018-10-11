@@ -1,0 +1,58 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: False
+  tasks:
+    - name: Install python for Ansible
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      become: True
+      changed_when: False
+
+- name: Converge
+  hosts: all
+  become: yes
+  vars:
+    # There is no repo for xenial but the stretch repo seems to work..
+    # Overriding this var here for usage in templates/etc/apt/sources.list.d/gitlab_gitlab-ce.list
+    gitlab_ansible_distribution_release: stretch
+    gitlab_external_url: "https://{{ ansible_hostname }}"
+    gitlab_email_enabled: "true"
+    gitlab_email_from: "noreply@{{ ansible_hostname }}"
+    gitlab_email_display_name: "noreply@{{ ansible_hostname }}"
+    gitlab_email_reply_to: "monitoring@example.com"
+    gitlab_nginx_ssl_certificate: /etc/ssl/certs/snakeoil.crt
+    gitlab_nginx_ssl_certificate_key: /etc/ssl/private/snakeoil.key
+    # This role will update the initial gitlab "root" user password
+    gitlab_root_user_password: secretpassword
+    gitlab_root_user_email: "monitoring@example.com"
+    # Disable ssl cert validation for molecule runs (use self signed)
+    gitlab_api_calls_validate_certs: False
+
+  pre_tasks:
+
+    # Prepare a snakeoil cert for gitlab to use
+    # only required in molecule
+    - name: install python-openssl
+      apt:
+        name: python-openssl
+        state: present
+
+    - name: generate an openssl private key
+      openssl_privatekey:
+        path: /etc/ssl/private/snakeoil.key
+
+    - name: generate an openssl certificate signing request
+      openssl_csr:
+        path: /etc/ssl/private/snakeoil.csr
+        privatekey_path: /etc/ssl/private/snakeoil.key
+        common_name: "snakeoil"
+
+    - name: generate an openssl self signed certificate
+      openssl_certificate:
+        path: /etc/ssl/certs/snakeoil.crt
+        privatekey_path: /etc/ssl/private/snakeoil.key
+        csr_path: /etc/ssl/private/snakeoil.csr
+        provider: selfsigned
+
+  roles:
+    - role: role-gitlab
