@@ -28,6 +28,23 @@
     # Disable ssl cert validation for molecule runs (use self signed)
     gitlab_api_calls_validate_certs: False
 
+    # optional LDAP
+    gitlab_use_ldap: False
+    gitlab_ldap_host: ldap-host
+    gitlab_ldap_port: 389
+    gitlab_ldap_uid: uid
+    gitlab_ldap_bind_dn: cn=gitlab,ou=users,dc=example,dc=com
+    gitlab_ldap_password: "secretpassword"
+    gitlab_ldap_encryption: plain
+    # Note the quotes around the booleans - gitlab.yml requires the _string_ "true" or "false"
+    gitlab_ldap_verify_certificates: "true"
+    gitlab_ldap_active_directory: "true"
+    gitlab_ldap_allow_username_or_email_login: "false"
+    gitlab_ldap_lowercase_usernames: "false"
+    gitlab_ldap_block_auto_created_users: "false"
+    gitlab_ldap_base: ou=users,dc=example,dc=com
+    gitlab_ldap_user_filter: (objectClass=posixAccount)
+
   pre_tasks:
 
     # Prepare a snakeoil cert for gitlab to use
