@@ -1,4 +1,4 @@
 ---
 gitlab_nginx_ssl_ciphers: 'ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256'
 gitlab_api_calls_validate_certs: True
-gitlab_use_ldap: False
+

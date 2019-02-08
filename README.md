@@ -4,7 +4,6 @@ This role installs and configures a gitlab server.
 # TODO
 - add a molecule test that curls the login page | grep login
 - add a test for admin login
-- add LDAP for users
 
 # Example play
 An example play can be found in `molecule/install/playbook.yml`
