@@ -19,7 +19,8 @@
     gitlab_email_enabled: "true"
     gitlab_email_from: "noreply@{{ ansible_hostname }}"
     gitlab_email_display_name: "noreply@{{ ansible_hostname }}"
-    gitlab_email_reply_to: "monitoring@example.com"
+    gitlab_email_reply_to: "gitlab@example.com"
+    gitlab_alertmanager_admin_email: "monitoring@example.com"
     gitlab_nginx_ssl_certificate: /etc/ssl/certs/snakeoil.crt
     gitlab_nginx_ssl_certificate_key: /etc/ssl/private/snakeoil.key
     # This role will update the initial gitlab "root" user password
