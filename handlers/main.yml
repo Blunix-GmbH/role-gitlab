@@ -4,10 +4,6 @@
 - name: gitlab-ctl restart
   command: gitlab-ctl restart
 
-# Used when replacing a certificate
-- name: restart gitlab nginx
-  command: gitlab-ctl restart nginx
-
 - name: wait for workhorse
   wait_for:
     port: 8080

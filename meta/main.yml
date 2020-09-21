@@ -1,16 +1,15 @@
 galaxy_info:
+
+  description: installs and configures gitlab
   author: Peter Thurner
   company: Blunix GmbH
-  license: Apache
-  min_ansible_version: 2.6
+  license: Apache2
+  min_ansible_version: 2.9.10
 
   platforms:
   - name: Debian
     versions:
-    - jessie
-  - name: Ubuntu
-    versions:
-    - Xenial
+    - bullseye
 
   galaxy_tags:
   - blunix

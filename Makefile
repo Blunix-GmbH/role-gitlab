@@ -26,4 +26,3 @@ clean:
 update:
 	pur -r requirements.txt
 	$(MAKE) install
-

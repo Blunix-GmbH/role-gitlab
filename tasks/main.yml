@@ -1,29 +1,103 @@
-- name: include distro installer
-  include: '{{ distro_installer }}'
-  with_first_found:
-    - install/{{ ansible_distribution }}.{{ ansible_lsb.codename }}.yml
-    - install/{{ ansible_distribution }}.yml
-    - install/default.yml
-  loop_control:
-    loop_var: distro_installer
-  tags:
-    - install
-    - gitlab
+- name: install requirements
+  apt:
+    name:
+      - curl
+      - ca-certificates
+      - apt-transport-https
+      - gnupg2
+      - locales
+      - expect
+    state: present
 
-- name: include distro configurator
-  include_tasks: "{{ distro_configurator }}"
-  with_first_found:
-    - "configure/{{ ansible_distribution }}.{{ ansible_lsb.codename }}.yml"
-    - "configure/{{ ansible_distribution }}.yml"
-    - "configure/default.yml"
-  loop_control:
-    loop_var: distro_configurator
-  tags:
-    - configure
-    - gitlab
+- name: install gitlab gpg key
+  apt_key:
+    state: present
+    url: https://packages.gitlab.com/gpg.key
 
-- name: include managing gitlab ressources via api calls
-  include_tasks: "configure/api.yml"
-  tags:
-    - configure
-    - gitlab
+- name: setup gitlab repository
+  apt_repository:
+    repo: "deb https://packages.gitlab.com/gitlab/gitlab-ce/debian/ {{ gitlab_ansible_distribution_release }} main"
+    state: present
+    filename: gitlab.list
+    update_cache: True
+
+- name: create directory /etc/gitlab
+  file:
+    state: directory
+    path: /etc/gitlab/
+    owner: root
+    group: root
+    mode: 0700
+
+- name: template /etc/gitlab/gitlab.rb
+  template:
+    src: templates/etc/gitlab/gitlab.rb.j2
+    dest: /etc/gitlab/gitlab.rb
+    owner: root
+    group: root
+    mode: 0600
+  notify:
+    - gitlab-ctl reconfigure
+    - gitlab-ctl restart
+    - wait for workhorse
+
+- name: check if gitlab is installed
+  stat:
+    path: /usr/bin/gitlab-rails
+  register: gitlab_rails_binary_present
+
+
+- name: iptables allow related and established
+  iptables:
+    chain: INPUT
+    ctstate: ESTABLISHED,RELATED
+    jump: ACCEPT
+    rule_num: "1"
+  become: yes
+
+- name: iptables drop port 443 to protect gitlab signup during installation
+  iptables:
+    chain: INPUT
+    destination_port: "443"
+    protocol: tcp
+    jump: DROP
+    action: insert
+    rule_num: "2"
+  when: not gitlab_rails_binary_present.stat.exists
+
+- name: install gitlab-ce
+  apt:
+    name: gitlab-ce
+    state: present
+
+- meta: flush_handlers
+
+
+
+# Found this: gitlab-rails runner 'ApplicationSetting.last.update_attributes(signup_enabled: true)'
+# here: https://gitlab.com/gitlab-org/omnibus-gitlab/-/issues/2837
+# But it doesn't work
+# TODO wait for that issue to be resolved and att it to gitlab.rb
+- name: disable gitlab signup
+  become: True
+  register: gitlab_disable_signup_output
+  shell: |
+    expect -c 'spawn gitlab-rails console;
+      expect "%s";
+      send "x = ApplicationSetting.first\r";
+      expect "%s";
+      send "x.signup_enabled = false\r";
+      expect "%s";
+      send "x.save!\r";
+      expect "%s";
+      send "^D"'
+
+- name: show disable gitlab signup output
+  debug:
+    msg: "{{ gitlab_disable_signup_output.stdout_lines }}"
+
+
+
+- name: iptables remove temporary rules
+  shell: iptables --delete INPUT 2; iptables --delete INPUT 1;
+  when: not gitlab_rails_binary_present.stat.exists
