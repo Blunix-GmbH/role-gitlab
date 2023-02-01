@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# Upgrade gitlab automatically if there is an upgrade available
+
+
+
+current_version=$(apt-cache --quiet=0 policy gitlab-ce | grep '\*\*\*' | cut -d ' ' -f 3)
+latest_version=$(apt-cache show gitlab-ce | grep "^Version" | sed -n 1p | cut -d ' ' -f 2)
+
+if [[ "$current_version" != "$latest_version" ]]; then
+    echo "GITLAB UPGRADE AVAILABLE"
+    echo "Current version: $current_version"
+    echo -e "Latest version: $latest_version\n\n"
+    set -x
+    apt-get update
+    apt-get -y install gitlab-ce
+    echo -e "\n\nUpgrade exit status: $?"
+fi

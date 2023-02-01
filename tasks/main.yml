@@ -70,6 +70,23 @@
     name: gitlab-ce
     state: present
 
+- name: template automatic upgrade cronjob script
+  template:
+    src: templates/etc/gitlab/automatic-upgrade.sh.j2
+    dest: /etc/gitlab/automatic-upgrade.sh
+    owner: root
+    group: root
+    mode: 0500
+
+- name: setup automatic upgrade cronjob
+  cron:
+    name: upgrade_gitlab
+    cron_file: upgrade_gitlab
+    user: root
+    job: "/usr/bin/prom-cron upgrade_gitlab /etc/gitlab/automatic-upgrade.sh"
+    minute: "0"
+    hour: "4"
+
 - meta: flush_handlers
 
 
